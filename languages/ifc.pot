@@ -1,0 +1,65 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Project-Id-Version: Image For Category\n"
+"POT-Creation-Date: 2016-03-30 22:27+0000\n"
+"PO-Revision-Date: 2016-03-30 22:23+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-WPHeader: category-featured-image.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: category-featured-image.php:160
+msgid "Image Category"
+msgstr ""
+
+#: category-featured-image.php:161
+msgid "Select"
+msgstr ""
+
+#: category-featured-image.php:188 category-featured-image.php:200
+msgid "Image"
+msgstr ""
+
+#: category-featured-image.php:193 category-featured-image.php:203
+msgid "Choose Image"
+msgstr ""
+
+#: category-featured-image.php:194 category-featured-image.php:204
+msgid "Delete Image"
+msgstr ""
+
+#: category-featured-image.php:195 category-featured-image.php:205
+msgid "Description"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "Image For Category"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "https://github.com/sidati/image-for-category"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Add image for each category"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Sidati"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "https://sidati.com"
+msgstr ""
