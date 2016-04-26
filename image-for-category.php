@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 /**
  * return attachement id of the category's image
  *
- * @param      int  $cat_id  (Category ID)
+ * @param      int  $cat_id  Category ID
  *
  * @return     int	Category's image ID
  */
@@ -43,15 +43,28 @@ function ifc_category_image_id($cat_id = false) {
 }
 
 /**
- * Print HTML markup of the image or nothing if the catgery has no image.
+ * { function_description }
+ *
+ * @param      int  $cat_id  Category ID
+ *
+ * @return     bool	return whether the category has image or nor
+ */
+function ifc_has_category_image($cat_id = false) {
+
+	return (bool) ifc_category_image_id($cat_id);
+
+}
+
+/**
+ * return HTML markup of the image or nothing if the catgery has no image.
  *
  * @param      boolean  $cat_id  ID of category
  * @param      string   $size    Size of printed image (thumbnail, medium, large, full or any other registred size)
  * @param      array    $attrs   Image attributes
  * 
- * @return     html print image markup if exist
+ * @return     html
  */
-function ifc_category_image($cat_id = false, $size = 'thumbnail', $attrs = array()) {
+function ifc_get_category_image($cat_id = false, $size = 'thumbnail', $attrs = array()) {
 
 	if (!$image_id = ifc_category_image_id($cat_id)) {
 		return;
@@ -66,7 +79,21 @@ function ifc_category_image($cat_id = false, $size = 'thumbnail', $attrs = array
 		'class' => 'ifc_category_image attachment-'.$size_class.' size-'.$size_class
 	));
 
-	echo wp_get_attachment_image($image_id, $size, false, $attrs);
+	return wp_get_attachment_image($image_id, $size, false, $attrs);
+}
+
+/**
+ * Print HTML markup of the image or nothing if the catgery has no image.
+ *
+ * @param      boolean  $cat_id  ID of category
+ * @param      string   $size    Size of printed image (thumbnail, medium, large, full or any other registred size)
+ * @param      array    $attrs   Image attributes
+ * 
+ * @return     html
+ */
+function ifc_the_category_image($cat_id = false, $size = 'thumbnail', $attrs = array()) {
+
+	echo ifc_get_category_image($cat_id, $size, $attrs);
 }
 
 /**
@@ -80,10 +107,13 @@ class ifc_plugin {
 	
 	function __construct() {
 
-		$this->plugins_url = plugins_url('category-featured-image');
+		$this->plugins_url = plugins_url('image-for-category');
 		$this->suffix = (defined('WP_DEBUG') && WP_DEBUG) ? null : '.min';
 
-		add_filter('media_view_strings', array($this, 'js_strings'));
+		add_filter('media_view_strings', function($strings){
+			$strings['icfCatImgTitle'] = __('Image Category', 'icf');
+			return $strings;
+		});
 
 		add_action('admin_init', array($this, 'styles'));
 		add_action('admin_enqueue_scripts', array($this, 'scripts'));
@@ -93,25 +123,23 @@ class ifc_plugin {
 		add_action( 'edited_term', array($this, 'save_image_id'), 10, 3 );
 		add_action( 'deleted_term', array($this, 'delete_image_id'), 10, 3 );
 
-		// register_activation_hook(__FILE__, array($this, 'activate'));
-		// register_deactivation_hook(__FILE__, array($this, 'deactivate'));
-		// register_uninstall_hook(__FILE__, array($this, 'uninstall'));
+		register_activation_hook(__FILE__, array(__CLASS__, 'de_activate'));
+		register_deactivation_hook(__FILE__, array(__CLASS__, 'de_activate'));
+		register_uninstall_hook(__FILE__, array(__CLASS__, 'uninstall'));
 
 		add_action('category_edit_form_fields', array($this, 'form_fields'));
 		add_action('category_add_form_fields', array($this, 'form_fields'));
 	}
 
-	public function activate() {
+	static function de_activate() {
 		wp_cache_flush();
 		// flush_rewrite_rules();
 	}
 
-	public function deactivate() {
-		wp_cache_flush();
-	}
-
-	public function uninstall() {
-		wp_cache_flush();
+	static function uninstall() {
+		global $wpdb;
+		$wpdb->query("DELETE FROM $wpdb->termmeta WHERE 'meta_key' = 'ifc'");
+		$wpdb->query("DELETE FROM $wpdb->options WHERE 'option_name' LIKE 'ifc-%'");
 	}
 
 	public function loaded() {
@@ -142,7 +170,7 @@ class ifc_plugin {
 	}
 
 	public function styles() {
-		wp_enqueue_style('sidati_ifc', $this->plugins_url.'/style'.$this->suffix.'.css', array(), self::VER, 'all');
+		wp_enqueue_style('sidati_ifc', $this->plugins_url.'/assets/style'.$this->suffix.'.css', array(), self::VER, 'all');
 	}
 
 	public function scripts($hook) {
@@ -152,15 +180,7 @@ class ifc_plugin {
 		}
 
 		wp_enqueue_media();
-		wp_enqueue_script('ifc', $this->plugins_url.'/script'.$this->suffix.'.js', array('jquery'), self::VER, true);
-	}
-
-	public function js_strings() {
-
-		$strings['ifcTitle'] = __('Image Category', 'ifc');
-		$strings['ifcBtn'] = __('Select', 'ifc');
-
-		return $strings;
+		wp_enqueue_script('ifc', $this->plugins_url.'/assets/script'.$this->suffix.'.js', array('jquery'), self::VER, true);
 	}
 
 	public function form_fields($term) {
@@ -171,8 +191,8 @@ class ifc_plugin {
 		if (doing_action('category_edit_form_fields')) :
 
 			if (function_exists('get_term_meta')) {
-				$image_id = get_term_meta($term->cat_id, 'ifc', true);
-			} elseif (!$image_id = get_option('ifc-'.$term->cat_id, false)) {
+				$image_id = get_term_meta($term->term_id, 'ifc', true);
+			} elseif (!$image_id = get_option('ifc-'.$term->term_id, false)) {
 				$image_id = null;
 			}
 
@@ -185,22 +205,23 @@ class ifc_plugin {
 		?>
 		<tr id="ifc_plugin" class="form-field">
 			<th valign="top" scope="row">
-				<label for="sidati_add_cat_img"><?php _e('Image', 'ifc'); ?></label>
+				<label for="ifc_id"><?php _e('Image', 'ifc'); ?></label>
 			</th>
 			<td>
 				<span style="background-image: url(<?php echo $src ?>);"></span>
 				<input type="hidden" name="ifc_id" value="<?php echo $image_id ?>">
-				<button class="button ifc_add<?php echo $add_btn_status ?>"><?php _e('Choose Image', 'ifc') ?></button>
-				<button class="button ifc_delete<?php echo $del_btn_status ?>"><?php _e('Delete Image', 'ifc') ?></button>
+				<button id="ifc_id" type="button" class="button ifc_add<?php echo $add_btn_status ?>"><?php _e('Choose Image', 'ifc') ?></button>
+				<button type="button" class="button ifc_delete<?php echo $del_btn_status ?>"><?php _e('Delete Image', 'ifc') ?></button>
 				<p class="description"><?php _e('Description', 'ifc') ?></p>
 			</td>
 		</tr>
 		<?php else : ?>
 		<div id="ifc_plugin" class="form-field term-description-wrap">
-			<label for="tag-description"><?php _e('Image', 'ifc') ?></label>
-			<span></span>
+			<label for="ifc_id"><?php _e('Image', 'ifc') ?>
+				<span></span>
+			</label>
 			<input type="hidden" name="ifc_id" value="">
-			<button class="button ifc_add"><?php _e('Choose Image', 'ifc') ?></button>
+			<button id="ifc_id" class="button ifc_add"><?php _e('Choose Image', 'ifc') ?></button>
 			<button class="button ifc_delete hidden"><?php _e('Delete Image', 'ifc') ?></button>
 			<p class="description"><?php _e('Description', 'ifc') ?></p>
 		</div>

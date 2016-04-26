@@ -18,11 +18,11 @@
 
 		// Create a new media frame
 		frame = media({
-			title: _wpMediaViewsL10n.ifcTitle,
-			button: {
-				text: _wpMediaViewsL10n.ifcBtn
+			title: _wpMediaViewsL10n.icfCatImgTitle,
+			library: {
+				type: 'image'
 			},
-			multiple: false // Set to true to allow multiple files to be selected
+			multiple: false
 		});
 
 
@@ -72,7 +72,7 @@
 			return;
 		}
 
-		setTimeout(function(){
+		setTimeout(function() {
 			if ($('#tag-name').val() == '') {
 				delImgLink.trigger('click');
 			}
